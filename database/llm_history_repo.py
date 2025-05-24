@@ -35,7 +35,7 @@ class LLMHistoryRepository:
         async with AsyncSessionLocal() as session:
             try:
                 create_table_sql = text("""
-                    CREATE TABLE IF NOT EXISTS arq.llm_log (
+                    CREATE TABLE IF NOT EXISTS aux.llm_log (
                         user_id TEXT NOT NULL,
                         user_query TEXT,
                         gpt_response TEXT,
@@ -54,7 +54,7 @@ class LLMHistoryRepository:
                 print("Resultado de criar a tabela llm_log: "+ str(result))
  
                 insert_sql = text("""
-                    INSERT INTO arq.llm_log (user_id, user_query, gpt_response, timestamp)
+                    INSERT INTO aux.llm_log (user_id, user_query, gpt_response, timestamp)
                     VALUES (:user_id, :user_query, :gpt_response, :timestamp);
                 """)
  
@@ -85,7 +85,7 @@ class LLMHistoryRepository:
             try:   
                 select_sql = text("""
                     SELECT user_id, user_query, gpt_response, timestamp
-                    FROM arq.llm_log
+                    FROM aux.llm_log
                     WHERE user_id = :user_id 
                     ORDER BY timestamp DESC
                     LIMIT 20;

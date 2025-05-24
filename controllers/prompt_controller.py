@@ -1,9 +1,9 @@
 # controllers/prompt_controller.py
 from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
-from models.prompt_models import PromptCreate, PromptUpdate, PromptResponse # Atualizado
+from models.prompt_models import PromptCreate, PromptUpdate, PromptResponse, PromptWithParams # Atualizado
 from managers.prompt_mgr import PromptManager
-# from utils.token_util import verify_token # Mantido se você usar
+from utils.token_util import verify_token # Mantido se você usar
 
 router = APIRouter(
     prefix="/api/prompts",
@@ -15,10 +15,9 @@ prompt_mgr = PromptManager()
 
 @router.post("/", response_model=PromptResponse, status_code=status.HTTP_201_CREATED)
 async def create_prompt(
-    prompt_data_payload: PromptCreate # Usar PromptCreate
-    # , token: dict = Depends(verify_token) # Descomente se usar token por rota
+    prompt_data_payload: PromptCreate ,
+    token: dict = Depends(verify_token) # Descomente se usar token por rota
 ):
-    # prompt_data_for_creation já está no formato correto (PromptCreate)
     created_prompt = await prompt_mgr.create_prompt(prompt_data_payload)
     if not created_prompt:
         raise HTTPException(
@@ -29,8 +28,8 @@ async def create_prompt(
 
 @router.get("/{prompt_id}", response_model=PromptResponse)
 async def get_prompt(
-    prompt_id: int
-    # , token: dict = Depends(verify_token)
+    prompt_id: int,
+    token: dict = Depends(verify_token)
 ):
     prompt = await prompt_mgr.get(prompt_id)
     if not prompt:
@@ -42,23 +41,20 @@ async def get_prompt(
 
 @router.get("/", response_model=List[PromptResponse]) # Especificar o response_model
 async def get_prompts(
-    # token: dict = Depends(verify_token)
+    token: dict = Depends(verify_token)
 ):
-    prompts = await prompt_mgr.get_all() # mgr.get_prompts agora deve retornar List[PromptResponse]
-    # A verificação de "if not prompts: return []" já é tratada pelo repo/mgr que retorna lista vazia
+    prompts = await prompt_mgr.get_all()
+
     return prompts
 
-
-# Rota para o menu, se a lógica for diferente de get_prompts
-@router.get("/menu/", response_model=List[Dict[str, Any]]) # Mantendo o retorno original se for específico
+@router.get("/menu/", response_model=List[PromptWithParams])
 async def get_prompts_menu(
-    # token: dict = Depends(verify_token)
+    token: dict = Depends(verify_token)
 ):
-    prompts_menu = await prompt_mgr.get_menu()
-    if not prompts_menu:
+    prompts_with_params = await prompt_mgr.get_menu_with_params()
+    if not prompts_with_params:
         return []
-    return prompts_menu
-
+    return prompts_with_params
 
 @router.put("/{prompt_id}", response_model=PromptResponse)
 async def update_prompt(

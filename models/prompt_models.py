@@ -15,17 +15,17 @@ class PromptUpdate(BaseModel):
     conteudo: Optional[str] = None
     tipo: Optional[TipoPromptEnum] = None
 
-class PromptResponse(BaseModel):
-    id: int
-    titulo: str
-    conteudo: str
-    tipo: TipoPromptEnum 
+class PromptResponse(PromptBase):
+    pass 
   
-class FilledParameter(): 
+class FilledParameter(BaseModel): 
     tipo_param: TipoParametroEnum
     valor: Any
     
 class PromptRequest(BaseModel):
     prompt_id: int
     llm_id: int
+    parameters: List[FilledParameter]
+    
+class PromptWithParams(PromptBase): 
     parameters: List[FilledParameter]

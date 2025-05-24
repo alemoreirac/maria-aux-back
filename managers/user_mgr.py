@@ -3,14 +3,9 @@ import os
 from dotenv import load_dotenv
 import json
 load_dotenv()
+import firebase_admin
 
-
-
-firebase_credentials = os.getenv("FIREBASE_CREDENTIALS")  # variável com o conteúdo JSON inteiro
-cred_dict = json.loads(firebase_credentials)
-cred = credentials.Certificate(cred_dict)
-
-#cred = credentials.Certificate(os.getenv("FIREBASE_CREDENTIALS"))
+cred = credentials.Certificate("utils/firebase-creds.json")
 initialize_app(cred)
 
 class UserManager:

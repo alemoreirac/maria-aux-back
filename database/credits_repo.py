@@ -26,7 +26,7 @@ class UserCreditRepository:
         async with AsyncSessionLocal() as session:
             try:
                 create_table_sql = text("""
-                    CREATE TABLE IF NOT EXISTS arq.user_credits (
+                    CREATE TABLE IF NOT EXISTS aux.user_credits (
                         user_id TEXT PRIMARY KEY,
                         credits INTEGER NOT NULL DEFAULT 0
                     );
@@ -56,7 +56,7 @@ class UserCreditRepository:
             try:
                 # Use INSERT ON CONFLICT DO UPDATE for atomic upsert (insert or update if exists)
                 insert_sql = text("""
-                    INSERT INTO arq.user_credits (user_id, credits)
+                    INSERT INTO aux.user_credits (user_id, credits)
                     VALUES (:user_id, :amount)
                     ON CONFLICT (user_id)
                     DO UPDATE SET credits = user_credits.credits + EXCLUDED.credits;
@@ -85,7 +85,7 @@ class UserCreditRepository:
         async with AsyncSessionLocal() as session:
             try: 
                 update_sql = text("""
-                    UPDATE arq.user_credits
+                    UPDATE aux.user_credits
                     SET credits = credits - 1
                     WHERE user_id = :user_id AND credits > 0;
                 """)
@@ -125,7 +125,7 @@ class UserCreditRepository:
         async with AsyncSessionLocal() as session:
             try:
                 select_sql = text("""
-                    SELECT credits FROM arq.user_credits WHERE user_id = :user_id;
+                    SELECT credits FROM aux.user_credits WHERE user_id = :user_id;
                 """)
                 
                 result = await session.execute(
@@ -167,7 +167,7 @@ class UserCreditRepository:
             try:
                 # Select credits and check if it's greater than 0
                 select_sql = text("""
-                    SELECT 1 FROM arq.user_credits WHERE user_id = :user_id AND credits > 0;
+                    SELECT 1 FROM aux.user_credits WHERE user_id = :user_id AND credits > 0;
                 """)
                 
                 result = await session.execute(

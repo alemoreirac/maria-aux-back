@@ -1,12 +1,13 @@
 import anthropic
-from fastapi import  HTTPException
+from fastapi import HTTPException
 import logging
 import os
-from managers.prompt_mgr import PromptManager
-from dotenv import load_dotenv 
+import base64 # Required for Claude image/document processing
+from managers.prompt_mgr import PromptManager # Assuming this is still needed for text-only part
+from dotenv import load_dotenv
 from models.prompt_models import PromptRequest
+
 load_dotenv()
- 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,73 +16,90 @@ anthropic_api_key = os.getenv("ANTHROPIC_API_KEY")
 if not anthropic_api_key:
     logger.warning("Anthropic API key not found in environment variables")
 
-prompt_mgr = PromptManager()
 client = anthropic.Anthropic(api_key=anthropic_api_key)
+prompt_mgr = PromptManager() # For text prompts if still used by 'process'
+
+MODEL_NAME = "claude-3-sonnet-20240229" # Or other Claude 3 models like Opus or Haiku
 
 async def process(req: PromptRequest) -> str:
-    
     try:
-        prompt = await prompt_mgr.mount(req)
+        prompt_content = await prompt_mgr.mount(req) # For text-based prompts
         
         response = client.messages.create(
-            model="claude-3-sonnet-20240229", 
-            messages=[{"role": "user", "content": prompt}],
+            model=MODEL_NAME,
+            messages=[{"role": "user", "content": prompt_content}],
             temperature=0.3,
-            max_tokens=2048 
+            max_tokens=2048
         )
 
-        categorized_items = response.content[0].text.strip()
-        logger.info("Resposta do Claude recebida com sucesso.")
-        return categorized_items
+        result = response.content[0].text.strip()
+        logger.info("Resposta do Claude (texto) recebida com sucesso.")
+        return result
 
     except Exception as e:
-        logger.error(f"Erro ao processar prompt com Claude: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro no processamento com Claude: {str(e)}")
+        logger.error(f"Erro ao processar prompt com Claude (texto): {e}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento com Claude (texto): {str(e)}")
 
+async def process_image_base64(image_base64: str, prompt_text: str, image_media_type: str = "image/jpeg") -> str:
+    try:
+        response = client.messages.create(
+            model=MODEL_NAME,
+            max_tokens=2048,
+            temperature=0.3,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image",
+                            "source": {
+                                "type": "base64",
+                                "media_type": image_media_type,
+                                "data": image_base64,
+                            },
+                        },
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ],
+        )
+        result = response.content[0].text.strip()
+        logger.info("Resposta de imagem do Claude recebida com sucesso.")
+        return result
+    except Exception as e:
+        logger.error(f"Erro ao processar imagem com Claude: {e}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento de imagem com Claude: {str(e)}")
 
-
-# async def process_pdf(pdf_path: str, prompt_id:int) -> str:
-#     """Send the PDF directly to Anthropic Claude for analysis."""
-#     try:
-#         # Encode the PDF to base64
-#         with open(pdf_path, "rb") as pdf_file:
-#             pdf_data = base64.b64encode(pdf_file.read()).decode("utf-8")
-        
-#         # Prepare the prompt
-#         prompt = await prompt_mgr.get_prompt(prompt_id) 
-#         prompt_text = prompt.titulo
- 
-        
-#         # Call the Anthropic API with the PDF
-#         response = anthropic_client.messages.create(
-#             #model="claude-3-7-sonnet-20250219",
-#             model="claude-sonnet-4-20250514",
-#             max_tokens=4000,
-#             messages=[
-#                 {
-#                     "role": "user",
-#                     "content": [
-#                         {
-#                             "type": "document",
-#                             "source": {
-#                                 "type": "base64",
-#                                 "media_type": "application/pdf",
-#                                 "data": pdf_data
-#                             }
-#                         },
-#                         {
-#                             "type": "text",
-#                             "text": prompt_text
-#                         }
-#                     ]
-#                 }
-#             ],
-#         )
-        
-#         return response.content[0].text
-    
-#     except Exception as e:
-#         logger.error(f"Error analyzing PDF with Anthropic: {e}")
-#         raise HTTPException(status_code=500, detail=f"Error analyzing PDF with Anthropic: {str(e)}")
-
-  
+async def process_pdf_base64(pdf_base64: str, prompt_text: str) -> str:
+    try:
+        response = client.messages.create(
+            model=MODEL_NAME,
+            max_tokens=4096, 
+            temperature=0.3,
+            messages=[
+                {
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "document",
+                            "source": { 
+                                "type": "base64",
+                                "media_type": "application/pdf",
+                                "data": pdf_base64,
+                            },
+                        },
+                        {"type": "text", "text": prompt_text},
+                    ],
+                }
+            ],
+        )
+        result = response.content[0].text.strip() # Access the text content
+        logger.info("Resposta de PDF do Claude recebida com sucesso.")
+        return result
+    except Exception as e:
+        logger.error(f"Erro ao processar PDF com Claude: {e}")
+        # Check for specific Anthropic errors if possible, e.g., e.status_code
+        if isinstance(e, anthropic.APIError):
+            logger.error(f"Anthropic API Error: {e.status_code} - {e.message}")
+            raise HTTPException(status_code=e.status_code or 500, detail=f"Erro da API Claude ao processar PDF: {e.message}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento de PDF com Claude: {str(e)}")

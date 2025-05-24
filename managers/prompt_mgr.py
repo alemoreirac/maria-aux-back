@@ -2,7 +2,7 @@
 import logging
 from typing import List, Optional, Any, Dict
 from database.prompt_repo import PromptRepository
-from models.prompt_models import PromptCreate, PromptRequest, PromptUpdate, PromptResponse # Atualizado
+from models.prompt_models import FilledParameter, PromptCreate, PromptRequest, PromptUpdate, PromptResponse, PromptWithParams # Atualizado
 from models.enums import TipoParametroEnum
 
 logger = logging.getLogger(__name__)
@@ -82,3 +82,34 @@ class PromptManager:
         result = result + param_values
         
         return result
+    
+    async def get_menu_with_params(self) -> List[PromptWithParams]:
+        try:
+            # Busca dados via JOIN no repository
+            prompts_data = await self.prompt_repo.get_prompts_with_params()
+            prompts_with_params = []
+            
+            for data in prompts_data:
+                filled_parameters = []
+                for param_data in data["parameters"]:
+                    filled_param = FilledParameter(
+                        tipo_param=TipoParametroEnum(param_data["tipo_param"]),
+                        valor=param_data["valor"]
+                    )
+                    filled_parameters.append(filled_param)
+                
+                prompt_with_params = PromptWithParams(
+                    titulo=data["titulo"],
+                    conteudo=data["conteudo"],
+                    tipo=TipoParametroEnum(data["tipo"]),
+                    parameters=filled_parameters
+                )
+                
+                prompts_with_params.append(prompt_with_params)
+            
+            logger.info(f"Retornando {len(prompts_with_params)} prompts com parâmetros")
+            return prompts_with_params
+            
+        except Exception as e:
+            logger.error(f"Erro ao buscar prompts com parâmetros: {str(e)}")
+            return []

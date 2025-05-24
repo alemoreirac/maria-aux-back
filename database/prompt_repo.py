@@ -167,10 +167,7 @@ class PromptRepository:
 
     async def delete_prompt(self, prompt_id: int) -> bool:
         async with AsyncSessionLocal() as session:
-            try:
-                # Adicionar cascade delete no banco para remover parâmetros associados
-                # ou deletá-los manualmente aqui antes de deletar o prompt.
-                # Por simplicidade, assumindo cascade delete no banco.
+            try: 
                 query = text("""
                     DELETE FROM aux.prompts
                     WHERE id = :prompt_id
@@ -188,3 +185,48 @@ class PromptRepository:
                 await session.rollback()
                 logger.error(f"Erro inesperado ao deletar prompt: {e}")
                 return False
+            
+    async def get_prompts_with_params(self) -> List[Dict[str, Any]]:
+        async with AsyncSessionLocal() as session:
+            try:
+                query = text("""
+                    SELECT 
+                        p.id,
+                        p.titulo,
+                        p.conteudo,
+                        p.tipo as prompt_tipo,
+                        COALESCE(
+                            JSON_AGG(
+                                JSON_BUILD_OBJECT(
+                                    'tipo_param', par.tipo,
+                                    'valor', COALESCE(par.valor_padrao, '')
+                                )
+                            ) FILTER (WHERE par.id IS NOT NULL),
+                            '[]'::json
+                        ) as parameters
+                    FROM aux.prompts p
+                    LEFT JOIN aux.parametros par ON p.id = par.prompt_id
+                    GROUP BY p.id, p.titulo, p.conteudo, p.tipo
+                    ORDER BY p.id
+                """)
+                
+                result = await session.execute(query)
+                rows = result.fetchall()
+                
+                return [
+                    {
+                        "id": row[0],
+                        "titulo": row[1],
+                        "conteudo": row[2],
+                        "tipo": row[3],
+                        "parameters": row[4]
+                    }
+                    for row in rows
+                ]
+                
+            except SQLAlchemyError as e:
+                logger.error(f"Erro ao buscar prompts com parâmetros: {e}")
+                return []
+            except Exception as e:
+                logger.error(f"Erro inesperado ao buscar prompts com parâmetros: {e}")
+                return []

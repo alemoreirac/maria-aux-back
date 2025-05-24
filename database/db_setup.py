@@ -10,11 +10,8 @@ class DatabaseSetup:
         self.conn = self._get_db_connection()
         
     def _get_db_connection(self): 
-        conn_string =  os.getenv("PG_CONN_STR")
-  
-        # Establish the connection
+        conn_string = os.getenv("PG_CONN_STR")
         conn = psycopg2.connect(conn_string) 
-        
         return conn
 
     def setup_database(self):
@@ -22,22 +19,14 @@ class DatabaseSetup:
         print("Iniciando configuração do banco de dados...")
         
         try:
-            # Primeiro, testar permissões com tabela temporária
-            self._test_permissions()
-            
             # Criar schema aux
             self._create_schema()
             
-            # Verificar se a extensão pgvector está disponível
-            has_pgvector = self._check_pgvector_extension()
-            
-            # Criar tabelas necessárias
-            self._create_functions_ia_table()
-            
-            if has_pgvector:
-                self._create_embeddings_table_with_vector()
-            else:
-                self._create_embeddings_table_without_vector()
+            # Criar tabelas dos repositórios
+            self._create_user_credits_table()
+            self._create_llm_log_table()
+            self._create_prompts_table()
+            self._create_parameters_table()
             
             print("Configuração do banco de dados concluída com sucesso!")
             return True
@@ -47,28 +36,6 @@ class DatabaseSetup:
             return False
         finally:
             self.conn.close()
-    
-    def _test_permissions(self):
-        """Testa as permissões do banco de dados"""
-        print("Testando permissões do banco de dados...")
-        cur = self.conn.cursor()
-        
-        try:
-            cur.execute("""
-                CREATE TEMPORARY TABLE test_permissions (
-                    id SERIAL PRIMARY KEY,
-                    data TEXT
-                );
-            """)
-            cur.execute("INSERT INTO test_permissions (data) VALUES ('test_data');")
-            self.conn.commit()
-            print("Teste de permissões bem-sucedido!")
-        except Exception as e:
-            self.conn.rollback()
-            print(f"Erro no teste de permissões: {e}")
-            raise
-        finally:
-            cur.close()
     
     def _create_schema(self):
         """Cria o schema aux"""
@@ -86,164 +53,96 @@ class DatabaseSetup:
         finally:
             cur.close()
     
-    def _check_pgvector_extension(self):
-        """Verifica se a extensão pgvector está disponível"""
-        print("Verificando extensão pgvector...")
+    def _create_user_credits_table(self):
+        """Cria a tabela aux.user_credits"""
+        print("Criando tabela aux.user_credits...")
         cur = self.conn.cursor()
         
         try:
-            # Verificar se a extensão está disponível para instalação
-            cur.execute("SELECT 1 FROM pg_available_extensions WHERE name = 'vector';")
-            extension_available = cur.fetchone() is not None
-            
-            if extension_available:
-                try:
-                    cur.execute("CREATE EXTENSION IF NOT EXISTS vector;")
-                    self.conn.commit()
-                    print("Extensão pgvector ativada com sucesso.")
-                    return True
-                except Exception as e:
-                    self.conn.rollback()
-                    print(f"Aviso: Não foi possível criar a extensão vector: {e}")
-                    return False
-            else:
-                print("Extensão pgvector não está disponível no servidor.")
-                print("Para suporte a embeddings vetoriais, instale a extensão pgvector:")
-                print("  1. Baixe em: https://github.com/pgvector/pgvector")
-                print("  2. Siga as instruções de instalação para seu sistema")
-                return False
-                
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS aux.user_credits (
+                    user_id TEXT PRIMARY KEY,
+                    credits INTEGER NOT NULL DEFAULT 0
+                );
+            """)
+            self.conn.commit()
+            print("Tabela aux.user_credits criada com sucesso.")
         except Exception as e:
-            print(f"Erro ao verificar extensão pgvector: {e}")
-            return False
+            self.conn.rollback()
+            print(f"Erro ao criar tabela aux.user_credits: {e}")
+            raise
         finally:
             cur.close()
     
-    def _create_functions_ia_table(self): 
-        """Cria a tabela aux.functions_ia"""
-        print("Criando tabela aux.functions_ia...")
+    def _create_llm_log_table(self):
+        """Cria a tabela aux.llm_log"""
+        print("Criando tabela aux.llm_log...")
         cur = self.conn.cursor()
         
         try:
-            # Verificar se a tabela já existe
-            cur.execute("SELECT to_regclass('aux.functions_ia');")
-            table_exists = cur.fetchone()[0] is not None
-            
-            if table_exists:
-                print("Tabela aux.functions_ia já existe, pulando criação.")
-                return
-                
-            # Tentar criar com schema aux
-            try:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS aux.aux.functions_ia (
-                        id SERIAL PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        prompt_template TEXT NOT NULL
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela aux.aux.functions_ia criada com sucesso.")
-            except Exception as e:
-                self.conn.rollback()
-                print(f"Erro ao criar tabela aux.aux.functions_ia: {e}")
-                
-                # Tentar sem o schema
-                print("Tentando criar tabela aux.functions_ia sem schema...")
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS aux.functions_ia (
-                        id SERIAL PRIMARY KEY,
-                        name TEXT NOT NULL,
-                        prompt_template TEXT NOT NULL
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela aux.functions_ia criada sem schema.")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS aux.llm_log (
+                    user_id TEXT NOT NULL,
+                    user_query TEXT,
+                    gpt_response TEXT,
+                    timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+                    PRIMARY KEY (user_id, timestamp)
+                );
+            """)
+            self.conn.commit()
+            print("Tabela aux.llm_log criada com sucesso.")
         except Exception as e:
             self.conn.rollback()
-            print(f"Erro ao verificar/criar tabela aux.functions_ia: {e}")
+            print(f"Erro ao criar tabela aux.llm_log: {e}")
+            raise
         finally:
             cur.close()
     
-    def _create_embeddings_table_with_vector(self):
-        """Cria a tabela embeddings com suporte a vetores (pgvector)"""
-        print("Criando tabela embeddings com suporte a pgvector...")
+    def _create_prompts_table(self):
+        """Cria a tabela aux.prompts"""
+        print("Criando tabela aux.prompts...")
         cur = self.conn.cursor()
         
         try:
-            # Tentar criar com schema aux
-            try:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS aux.embeddings (
-                        id SERIAL PRIMARY KEY,
-                        text TEXT NOT NULL,
-                        embedding vector(1536),
-                        metadata JSONB
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela aux.embeddings criada com sucesso (com vetores).")
-            except Exception as e:
-                self.conn.rollback()
-                print(f"Erro ao criar tabela aux.embeddings: {e}")
-                
-                # Tentar sem o schema
-                print("Tentando criar tabela embeddings sem schema...")
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS embeddings (
-                        id SERIAL PRIMARY KEY,
-                        text TEXT NOT NULL,
-                        embedding vector(1536),
-                        metadata JSONB
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela embeddings criada sem schema (com vetores).")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS aux.prompts (
+                    id SERIAL PRIMARY KEY,
+                    titulo TEXT NOT NULL,
+                    conteudo TEXT NOT NULL,
+                    tipo TEXT NOT NULL
+                );
+            """)
+            self.conn.commit()
+            print("Tabela aux.prompts criada com sucesso.")
         except Exception as e:
             self.conn.rollback()
-            print(f"Erro ao criar tabela embeddings: {e}")
+            print(f"Erro ao criar tabela aux.prompts: {e}")
+            raise
         finally:
             cur.close()
     
-    def _create_embeddings_table_without_vector(self):
-        """Cria a tabela embeddings sem suporte a vetores (fallback)"""
-        print("Criando tabela embeddings sem suporte a pgvector (modo alternativo)...")
+    def _create_parameters_table(self):
+        """Cria a tabela aux.parameters"""
+        print("Criando tabela aux.parameters...")
         cur = self.conn.cursor()
         
         try:
-            # Tentar criar com schema aux
-            try:
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS aux.embeddings (
-                        id SERIAL PRIMARY KEY,
-                        text TEXT NOT NULL,
-                        embedding JSONB,
-                        metadata JSONB
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela aux.embeddings criada sem suporte a vetores.")
-                print("AVISO: Os embeddings serão armazenados como JSON e não terão suporte a operações vetoriais eficientes.")
-            except Exception as e:
-                self.conn.rollback()
-                print(f"Erro ao criar tabela aux.embeddings: {e}")
-                
-                # Tentar sem o schema
-                print("Tentando criar tabela embeddings sem schema...")
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS embeddings (
-                        id SERIAL PRIMARY KEY,
-                        text TEXT NOT NULL,
-                        embedding vector(1536),
-                        metadata JSONB
-                    );
-                """)
-                self.conn.commit()
-                print("Tabela embeddings criada sem schema (sem suporte a vetores).")
-                print("AVISO: Os embeddings serão armazenados como JSON e não terão suporte a operações vetoriais eficientes.")
+            cur.execute("""
+                CREATE TABLE IF NOT EXISTS aux.parameters (
+                    id SERIAL PRIMARY KEY,
+                    prompt_id INTEGER NOT NULL,
+                    titulo TEXT NOT NULL,
+                    descricao TEXT,
+                    tipo TEXT NOT NULL,
+                    FOREIGN KEY (prompt_id) REFERENCES aux.prompts(id) ON DELETE CASCADE
+                );
+            """)
+            self.conn.commit()
+            print("Tabela aux.parameters criada com sucesso.")
         except Exception as e:
             self.conn.rollback()
-            print(f"Erro ao criar tabela embeddings: {e}")
+            print(f"Erro ao criar tabela aux.parameters: {e}")
+            raise
         finally:
             cur.close()
 
