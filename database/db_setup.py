@@ -10,7 +10,8 @@ class DatabaseSetup:
         self.conn = self._get_db_connection()
         
     def _get_db_connection(self): 
-        conn_string = os.getenv("PG_CONN_STR")
+        #conn_string = os.getenv("PG_CONN_STR")
+        conn_string = "postgresql://maria-aux-db_owner:npg_poNwDm9Ast3l@ep-floral-shape-ac1o869z-pooler.sa-east-1.aws.neon.tech/maria-aux-db?sslmode=require"
         conn = psycopg2.connect(conn_string) 
         return conn
 
