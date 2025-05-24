@@ -31,6 +31,9 @@ class PromptRepository:
     async def create_prompt(self, prompt_data: PromptCreate) -> Optional[PromptResponse]:
         async with AsyncSessionLocal() as session:
             try:
+                print("teste@###########")
+                print(str(prompt_data))
+                
                 query = text("""
                     INSERT INTO aux.prompts (titulo, conteudo, tipo)
                     VALUES (:titulo, :conteudo, :tipo)
