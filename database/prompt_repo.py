@@ -189,47 +189,75 @@ class PromptRepository:
                 logger.error(f"Erro inesperado ao deletar prompt: {e}")
                 return False
             
-    async def get_prompts_with_params(self) -> List[Dict[str, Any]]:
-        async with AsyncSessionLocal() as session:
-            try:
-                query = text("""
-                    SELECT 
-                        p.id,
-                        p.titulo,
-                        p.conteudo,
-                        p.tipo as prompt_tipo,
-                        COALESCE(
-                            JSON_AGG(
-                                JSON_BUILD_OBJECT(
-                                    'tipo_param', par.tipo,
-                                    'valor', COALESCE(par.valor_padrao, '')
-                                )
-                            ) FILTER (WHERE par.id IS NOT NULL),
-                            '[]'::json
-                        ) as parameters
-                    FROM aux.prompts p
-                    LEFT JOIN aux.parameters par ON p.id = par.prompt_id
-                    GROUP BY p.id, p.titulo, p.conteudo, p.tipo
-                    ORDER BY p.id
-                """)
-                
-                result = await session.execute(query)
-                rows = result.fetchall()
-                
-                return [
-                    {
+async def get_prompts_with_params(self) -> List[Dict[str, Any]]:
+    async with AsyncSessionLocal() as session:
+        try:
+            # Query com debug e campos corretos
+            query = text("""
+                SELECT
+                    p.id,
+                    p.titulo,
+                    p.conteudo,
+                    p.tipo as prompt_tipo,
+                    CASE 
+                        WHEN COUNT(par.id) = 0 THEN '[]'::json
+                        ELSE JSON_AGG(
+                            JSON_BUILD_OBJECT(
+                                'id', par.id,
+                                'titulo', par.titulo,
+                                'descricao', par.descricao,
+                                'tipo_param', par.tipo,
+                                'valor', COALESCE(par.valor_padrao, '')
+                            ) ORDER BY par.id
+                        )
+                    END as parameters
+                FROM aux.prompts p
+                LEFT JOIN aux.parameters par ON p.id = par.prompt_id
+                GROUP BY p.id, p.titulo, p.conteudo, p.tipo
+                ORDER BY p.id
+            """)
+            
+            result = await session.execute(query)
+            rows = result.fetchall()
+            
+            logger.info(f"Query retornou {len(rows)} prompts")
+            
+            response_data = []
+            for row in rows:
+                try:
+                    parameters = row[4]
+                    # Se parameters vier como string, converter para JSON
+                    if isinstance(parameters, str):
+                        import json
+                        parameters = json.loads(parameters)
+                    
+                    response_data.append({
                         "id": row[0],
                         "titulo": row[1],
                         "conteudo": row[2],
                         "tipo": row[3],
-                        "parameters": row[4]
-                    }
-                    for row in rows
-                ]
-                
-            except SQLAlchemyError as e:
-                logger.error(f"Erro ao buscar prompts com parâmetros: {e}")
-                return []
-            except Exception as e:
-                logger.error(f"Erro inesperado ao buscar prompts com parâmetros: {e}")
-                return []
+                        "parameters": parameters
+                    })
+                    
+                    # Debug: log do primeiro prompt para verificar estrutura
+                    if len(response_data) == 1:
+                        logger.info(f"Exemplo de prompt: {response_data[0]}")
+                        
+                except Exception as row_error:
+                    logger.error(f"Erro ao processar linha do prompt {row[0]}: {row_error}")
+                    response_data.append({
+                        "id": row[0],
+                        "titulo": row[1],
+                        "conteudo": row[2],
+                        "tipo": row[3],
+                        "parameters": []
+                    })
+            
+            return response_data
+            
+        except SQLAlchemyError as e:
+            logger.error(f"Erro SQLAlchemy ao buscar prompts com parâmetros: {str(e)}")
+            return []
+        except Exception as e:
+            logger.error(f"Erro inesperado ao buscar prompts com parâmetros: {str(e)}")
+            return []
