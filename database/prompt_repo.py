@@ -80,7 +80,7 @@ class PromptRepository:
                         id=prompt_row[0],
                         titulo=prompt_row[1],
                         conteudo=prompt_row[2],
-                        tipo=TipoParametroEnum(prompt_row[3])
+                        tipo=TipoParametroEnum(int(prompt_row[3]))
                     )
                 return None
             except SQLAlchemyError as e:
@@ -101,7 +101,7 @@ class PromptRepository:
                         id=row[0],
                         titulo=row[1],
                         conteudo=row[2],
-                        tipo=TipoParametroEnum(row[3])
+                        tipo=TipoParametroEnum(int(row[3]))
                     ) for row in prompt_rows
                 ]
             except SQLAlchemyError as e:
@@ -129,7 +129,7 @@ class PromptRepository:
                         id=current_prompt[0],
                         titulo=current_prompt[1],
                         conteudo=current_prompt[2],
-                        tipo=TipoParametroEnum(current_prompt[3])
+                        tipo=TipoParametroEnum(int(current_prompt[3]))
                     )
 
                 # Se 'tipo' estiver sendo atualizado, use seu valor numérico
@@ -156,7 +156,7 @@ class PromptRepository:
                         id=updated_prompt_row[0],
                         titulo=updated_prompt_row[1],
                         conteudo=updated_prompt_row[2],
-                        tipo=TipoParametroEnum(updated_prompt_row[3])
+                        tipo=TipoParametroEnum(int(updated_prompt_row[3]))
                     )
                 return None
             except SQLAlchemyError as e:
