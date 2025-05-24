@@ -208,7 +208,7 @@ class PromptRepository:
                             '[]'::json
                         ) as parameters
                     FROM aux.prompts p
-                    LEFT JOIN aux.parametros par ON p.id = par.prompt_id
+                    LEFT JOIN aux.parameters par ON p.id = par.prompt_id
                     GROUP BY p.id, p.titulo, p.conteudo, p.tipo
                     ORDER BY p.id
                 """)
