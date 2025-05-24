@@ -3,8 +3,7 @@ import logging
 from typing import List, Optional, Any, Dict
 from database.prompt_repo import PromptRepository
 from models.prompt_models import FilledParameter, PromptCreate, PromptRequest, PromptUpdate, PromptResponse, PromptWithParams # Atualizado
-from models.enums import TipoParametroEnum
-
+from models.enums import TipoParametroEnum 
 logger = logging.getLogger(__name__)
 
 class PromptManager:
@@ -52,20 +51,4 @@ class PromptManager:
             logger.warning(f"Falha ao deletar prompt {prompt_id} ou prompt não encontrado.")
         return was_deleted
      
-    async def mount(self, req: PromptRequest) -> str:
-        if req.prompt_id <= 0:
-            logger.warning("ID do prompt inválido.")
-            return ""
-        prompt = await self.prompt_repo.get_prompt(req.prompt_id)
-        
-        result = prompt.conteudo
-        param_values = ""
-        for param in req.parameters:
-            placeholder = "{" + param.titulo + "}: "
-            param_value_str = str(param.valor) + "\n"
-            param_values = param_values + placeholder + param_value_str
-        
-        result = result + param_values
-        
-        return result
          

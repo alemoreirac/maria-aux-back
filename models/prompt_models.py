@@ -19,6 +19,7 @@ class PromptResponse(PromptBase):
     pass 
   
 class FilledParameter(BaseModel): 
+    titulo: str
     tipo_param: TipoParametroEnum
     valor: Any
     

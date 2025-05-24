@@ -8,7 +8,7 @@ from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
 from models.enums import TipoParametroEnum, TipoPromptEnum
-from pydantic import BaseModel
+from models.menu_models import MenuParameter, MenuPromptWithParams
 
 load_dotenv()
 
@@ -26,20 +26,7 @@ AsyncSessionLocal = sessionmaker(
 
 logger = logging.getLogger(__name__)
 
-# Modelo simples para o parâmetro no menu
-class MenuParameter(BaseModel):
-    id: int
-    titulo: str
-    descricao: str
-    tipo: TipoParametroEnum
 
-# Modelo para o prompt com seus parâmetros
-class MenuPromptWithParams(BaseModel):
-    id: int
-    titulo: str
-    conteudo: str
-    tipo: TipoPromptEnum
-    parameters: List[MenuParameter]
 
 class MenuRepository:
     

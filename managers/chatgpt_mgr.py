@@ -4,7 +4,7 @@ from fastapi import HTTPException
 from models.prompt_models import PromptRequest
 from dotenv import load_dotenv
 from openai import OpenAI
-from managers.prompt_mgr import PromptManager # Assuming this is still needed for text-only part
+from managers.menu_mgr import MenuManager # Assuming this is still needed for text-only part
 
 load_dotenv()
 
@@ -16,7 +16,7 @@ if not openai_api_key:
     logger.warning("OpenAI API key not found in environment variables")
 
 client = OpenAI(api_key=openai_api_key)
-prompt_mgr = PromptManager() # For text prompts if still used by 'process'
+menu_mgr = MenuManager()  
 
 # Model capable of multimodal input, e.g., gpt-4o or gpt-4-turbo
 MULTIMODAL_MODEL = "gpt-4o" # Or "gpt-4-turbo"
@@ -24,7 +24,9 @@ TEXT_MODEL = "gpt-4.1" # Or your preferred text model, can be MULTIMODAL_MODEL t
 
 async def process(req: PromptRequest) -> str:
     try:
-        prompt_content = await prompt_mgr.mount(req) # For text-based prompts
+        prompt_content = await menu_mgr.mount2(req)  
+        print("####PROMPT CONTENT#######")
+        print(prompt_content)
         
         response = client.chat.completions.create(
             model=TEXT_MODEL,
