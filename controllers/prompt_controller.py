@@ -58,8 +58,8 @@ async def get_prompts_menu(
 @router.put("/{prompt_id}", response_model=PromptResponse)
 async def update_prompt(
     prompt_id: int,
-    prompt_update_data: PromptUpdate # Usar PromptUpdate
-    # , token: dict = Depends(verify_token)
+    prompt_update_data: PromptUpdate,
+    token: dict = Depends(verify_token)
 ):
     updated_prompt = await prompt_mgr.update(prompt_id, prompt_update_data)
     if not updated_prompt:
@@ -71,12 +71,9 @@ async def update_prompt(
 
 @router.delete("/{prompt_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_prompt(
-    prompt_id: int
-    # , token: dict = Depends(verify_token) # Se o user_id vier do token, precisará dele
+    prompt_id: int,
+    token: dict = Depends(verify_token) # Se o user_id vier do token, precisará dele
 ):
-    # Se delete_prompt no manager precisar de user_id, você terá que obtê-lo do token
-    # Exemplo: user_id = token.get("user_id")
-    # success = await prompt_mgr.delete_prompt(prompt_id, user_id) # Se precisar de user_id
     success = await prompt_mgr.delete(prompt_id) # Se não precisar de user_id na camada do controller
     if not success:
         raise HTTPException(

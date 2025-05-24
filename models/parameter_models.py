@@ -19,5 +19,5 @@ class ParameterResponse(ParameterBase):
     id: int
     prompt_id: int
 
-    class Config:
-        orm_mode = True # or from_attributes = True for Pydantic v2
+class Config:
+    from_attributes = True
