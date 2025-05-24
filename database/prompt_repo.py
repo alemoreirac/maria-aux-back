@@ -54,7 +54,7 @@ class PromptRepository:
                         id=created_prompt_row[0],
                         titulo=created_prompt_row[1],
                         conteudo=created_prompt_row[2],
-                        tipo=TipoParametroEnum(created_prompt_row[3]) # Converter de volta para Enum
+                        tipo=TipoParametroEnum(int(created_prompt_row[3])) # Converter de volta para Enum
                     )
                 return None
             except SQLAlchemyError as e:
