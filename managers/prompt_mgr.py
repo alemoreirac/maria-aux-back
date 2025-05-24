@@ -56,7 +56,7 @@ class PromptManager:
         if req.prompt_id <= 0:
             logger.warning("ID do prompt inválido.")
             return ""
-        prompt = self.prompt_repo.get_prompt(req.prompt_id)
+        prompt = await self.prompt_repo.get_prompt(req.prompt_id)
         
         result = prompt.conteudo
         param_values = ""

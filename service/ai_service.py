@@ -1,20 +1,17 @@
 import logging
 from fastapi import HTTPException
 from database.credits_repo import UserCreditRepository
-# from database.llm_history_repo import LLMHistoryRepository # Not used in route_ai
-from typing import List, Dict, Optional, Tuple, Union, Any # Keep Any for FilledParameter.valor
-from managers import gemini_mgr, chatgpt_mgr, claude_mgr # Import modules directly
-from models.prompt_models import PromptRequest, FilledParameter # Import FilledParameter
+from managers import gemini_mgr, chatgpt_mgr, claude_mgr 
+from models.prompt_models import PromptRequest
 from models.enums import LLM, TipoParametroEnum, TipoPromptEnum
-from managers.prompt_mgr import PromptManager # To fetch prompt details
+from managers.prompt_mgr import PromptManager
 
 logger = logging.getLogger(__name__)
 
 class AIService:
     def __init__(self):
-        # self.llm_log = LLMHistoryRepository() # Not currently used in route_ai
         self.credits_repo = UserCreditRepository()
-        self.prompt_mgr = PromptManager() # Instantiate PromptManager
+        self.prompt_mgr = PromptManager() 
         pass
     
     async def route_ai(self, req: PromptRequest, user_id: str) -> str:
@@ -27,7 +24,7 @@ class AIService:
             raise HTTPException(status_code=404, detail=f"Prompt com ID {req.prompt_id} não encontrado.")
 
         result = None
-        prompt_content_for_llm = full_prompt.conteudo # Default prompt text from the prompt's content
+        prompt_content_for_llm = full_prompt.conteudo 
 
         if full_prompt.tipo == TipoPromptEnum.TEXTO:
             if req.llm_id == LLM.CHAT_GPT:
@@ -41,7 +38,7 @@ class AIService:
 
         elif full_prompt.tipo == TipoPromptEnum.IMAGEM:
             image_base64 = None
-            image_media_type = "image/jpeg" # Default, can be made dynamic if needed
+            image_media_type = "image/jpeg" 
             for param in req.parameters:
                 if param.tipo_param == TipoParametroEnum.IMAGEM:
                     image_base64 = param.valor
@@ -63,7 +60,7 @@ class AIService:
         elif full_prompt.tipo == TipoPromptEnum.PDF:
             pdf_base64 = None
             for param in req.parameters:
-                if param.tipo_param == TipoParametroEnum.ARQUIVO_PDF: # Ensure this enum value matches your definition
+                if param.tipo_param == TipoParametroEnum.ARQUIVO_PDF: 
                     pdf_base64 = param.valor
                     break
             
@@ -83,9 +80,9 @@ class AIService:
             raise HTTPException(status_code=400, detail="Tipo de prompt não suportado.")
 
 
-        if result is not None: # Check if result was set (i.e., processing happened)
+        if result is not None: 
             await self.credits_repo.deduct_credit(user_id)
             return result
         else:
-            # This case should ideally be caught by earlier checks, but as a fallback:
+
             raise HTTPException(status_code=500, detail="Falha no processamento da IA ou rota não encontrada.")
