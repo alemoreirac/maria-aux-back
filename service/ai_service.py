@@ -22,7 +22,7 @@ class AIService:
         if not await self.credits_repo.has_credits(user_id):
             raise HTTPException(status_code=402, detail="Créditos insuficientes para realizar esta operação.")
 
-        full_prompt = await self.prompt_mgr.get_prompt(req.prompt_id)
+        full_prompt = await self.prompt_mgr.get(req.prompt_id)
         if not full_prompt:
             raise HTTPException(status_code=404, detail=f"Prompt com ID {req.prompt_id} não encontrado.")
 

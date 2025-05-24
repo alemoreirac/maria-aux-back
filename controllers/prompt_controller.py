@@ -45,16 +45,7 @@ async def get_prompts(
     prompts = await prompt_mgr.get_all()
 
     return prompts
-
-@router.get("/menu/", response_model=List[PromptWithParams])
-async def get_prompts_menu(
-    token: dict = Depends(verify_token)
-):
-    prompts_with_params = await prompt_mgr.get_menu_with_params()
-    if not prompts_with_params:
-        return []
-    return prompts_with_params
-
+ 
 @router.put("/{prompt_id}", response_model=PromptResponse)
 async def update_prompt(
     prompt_id: int,
