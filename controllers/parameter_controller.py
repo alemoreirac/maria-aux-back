@@ -3,7 +3,7 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
 from models.parameter_models import ParameterCreate, ParameterUpdate, ParameterResponse
 from managers.parameter_mgr import ParameterManager
-# from utils.token_util import verify_token # Se for usar autenticação
+from utils.token_util import verify_token # Se for usar autenticação
 
 router = APIRouter(
     prefix="/api", # Prefixo base, as rotas específicas definirão o resto
@@ -17,7 +17,8 @@ parameter_mgr = ParameterManager()
 @router.post("/prompts/{prompt_id}/parameters/", response_model=ParameterResponse, status_code=status.HTTP_201_CREATED)
 async def create_parameter_for_prompt(
     prompt_id: int,
-    parameter_payload: ParameterCreate # O payload já inclui prompt_id, mas podemos validar
+    parameter_payload: ParameterCreate,
+    token: dict = Depends(verify_token)
 ):
     if prompt_id != parameter_payload.prompt_id:
         raise HTTPException(
@@ -35,14 +36,18 @@ async def create_parameter_for_prompt(
 
 # Obter todos os parâmetros de um prompt específico
 @router.get("/prompts/{prompt_id}/parameters/", response_model=List[ParameterResponse])
-async def get_parameters_for_prompt(prompt_id: int):
+async def get_parameters_for_prompt(prompt_id: int,
+    token: dict = Depends(verify_token) # Descomente se usar token por rota
+):
     parameters = await parameter_mgr.get_parameters_for_prompt(prompt_id)
     # O manager já retorna lista vazia se não encontrar ou erro
     return parameters
 
 # Obter um parâmetro específico pelo seu ID
 @router.get("/parameters/{parameter_id}", response_model=ParameterResponse)
-async def get_parameter(parameter_id: int):
+async def get_parameter(parameter_id: int,
+    token: dict = Depends(verify_token) # Descomente se usar token por rota
+):
     parameter = await parameter_mgr.get_parameter(parameter_id)
     if not parameter:
         raise HTTPException(
@@ -55,7 +60,8 @@ async def get_parameter(parameter_id: int):
 @router.put("/parameters/{parameter_id}", response_model=ParameterResponse)
 async def update_parameter(
     parameter_id: int,
-    parameter_update_data: ParameterUpdate
+    parameter_update_data: ParameterUpdate,
+    token: dict = Depends(verify_token) # Descomente se usar token por rota
 ):
     updated_parameter = await parameter_mgr.update_parameter(parameter_id, parameter_update_data)
     if not updated_parameter:
@@ -67,7 +73,9 @@ async def update_parameter(
 
 # Deletar um parâmetro específico
 @router.delete("/parameters/{parameter_id}", status_code=status.HTTP_204_NO_CONTENT)
-async def delete_parameter(parameter_id: int):
+async def delete_parameter(parameter_id: int,
+    token: dict = Depends(verify_token) 
+):
     success = await parameter_mgr.delete_parameter(parameter_id)
     if not success:
         raise HTTPException(

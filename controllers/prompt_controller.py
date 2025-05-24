@@ -3,12 +3,11 @@ from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
 from models.prompt_models import PromptCreate, PromptUpdate, PromptResponse, PromptWithParams # Atualizado
 from managers.prompt_mgr import PromptManager
-from utils.token_util import verify_token # Mantido se você usar
+from utils.token_util import verify_token 
 
 router = APIRouter(
     prefix="/api/prompts",
     tags=["Prompts"]
-    # dependencies=[Depends(verify_token)] # Adicionar dependência global se aplicável a todas as rotas
 )
 
 prompt_mgr = PromptManager()

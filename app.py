@@ -1,5 +1,5 @@
 import logging
-from controllers import ai_controller, user_controller, prompt_controller, parameter_controller
+from controllers import ai_controller, user_controller, prompt_controller, parameter_controller, menu_controller
 from database.db_setup import DatabaseSetup
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
@@ -29,6 +29,7 @@ app.include_router(parameter_controller.router)
 app.include_router(ai_controller.router)
 app.include_router(prompt_controller.router)
 app.include_router(user_controller.router)
+app.include_router(menu_controller.router)
 
 # Optional: Add a root endpoint to easily check if the API is running
 @app.get("/")
