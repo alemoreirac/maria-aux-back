@@ -1,7 +1,10 @@
 # managers/prompt_mgr.py
 import logging
+from typing import Any, Dict
+from fastapi import HTTPException
 from database.menu_repo import MenuRepository
 from models.prompt_models import PromptRequest
+from models.enums import TipoParametroEnum 
 logger = logging.getLogger(__name__)
 
 class MenuManager:
@@ -12,8 +15,10 @@ class MenuManager:
         if req.prompt_id <= 0:
             logger.warning("ID do prompt inválido.")
             return ""
-         
-        result = req.conteudo
+        
+        prompt = await self.menu_repo.get_prompt_with_parameters(req.prompt_id)
+        
+        result = prompt.conteudo
         param_values = ""
         for param in req.parameters:
             placeholder = "{" + param.titulo + "}: "
