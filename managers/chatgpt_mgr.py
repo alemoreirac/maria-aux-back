@@ -18,13 +18,12 @@ if not openai_api_key:
 client = OpenAI(api_key=openai_api_key)
 menu_mgr = MenuManager()  
 
-# Model capable of multimodal input, e.g., gpt-4o or gpt-4-turbo
-MULTIMODAL_MODEL = "gpt-4o" # Or "gpt-4-turbo"
-TEXT_MODEL = "gpt-4.1" # Or your preferred text model, can be MULTIMODAL_MODEL too
+MULTIMODAL_MODEL = "gpt-4o"  
+TEXT_MODEL = "gpt-4.1"  
 
 async def process(req: PromptRequest) -> str:
     try:
-        prompt_content = await menu_mgr.mount2(req)  
+        prompt_content = await menu_mgr.mount(req)  
         print("####PROMPT CONTENT#######")
         print(prompt_content)
         

@@ -7,7 +7,7 @@ from models.enums import LLM, TipoParametroEnum, TipoPromptEnum
 from managers.prompt_mgr import PromptManager
 
 logger = logging.getLogger(__name__)
-
+ 
 class AIService:
     def __init__(self):
         self.credits_repo = UserCreditRepository()
