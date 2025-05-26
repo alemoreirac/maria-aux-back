@@ -13,6 +13,7 @@ class TipoPromptEnum(IntEnum):
     TEXTO = 1
     IMAGEM  = 2
     PDF = 3
+    BUSCA = 4
     
 class LLM(IntEnum):
     CHAT_GPT = 1

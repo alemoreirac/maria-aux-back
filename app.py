@@ -5,8 +5,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
 import uvicorn
 
-app = FastAPI(title="Arquitetudo-Back",
-              description="API Arquitetudo 1.0.0")
+app = FastAPI(title="Maria-Aux Back-end",
+              description="API Maria Aux 1.0.0")
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -34,7 +34,7 @@ app.include_router(menu_controller.router)
 # Optional: Add a root endpoint to easily check if the API is running
 @app.get("/")
 async def read_root(): 
-    return {"message": "Arquitetudo-Back API is running!"}
+    return {"message": "Maria Auxiliadora API está ok!"}
 
 if __name__ == "__main__":
     db_setup = DatabaseSetup()

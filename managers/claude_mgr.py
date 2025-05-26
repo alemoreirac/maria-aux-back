@@ -2,8 +2,7 @@ import anthropic
 from fastapi import HTTPException
 import logging
 import os
-import base64 # Required for Claude image/document processing
-from managers.prompt_mgr import PromptManager # Assuming this is still needed for text-only part
+from managers.menu_mgr import MenuManager 
 from dotenv import load_dotenv
 from models.prompt_models import PromptRequest
 
@@ -17,13 +16,13 @@ if not anthropic_api_key:
     logger.warning("Anthropic API key not found in environment variables")
 
 client = anthropic.Anthropic(api_key=anthropic_api_key)
-prompt_mgr = PromptManager() # For text prompts if still used by 'process'
+menu_mgr = MenuManager() 
 
-MODEL_NAME = "claude-3-sonnet-20240229" # Or other Claude 3 models like Opus or Haiku
+MODEL_NAME = "claude-3-sonnet-20240229" 
 
 async def process(req: PromptRequest) -> str:
     try:
-        prompt_content = await prompt_mgr.mount(req) # For text-based prompts
+        prompt_content = await menu_mgr.mount(req) # For text-based prompts
         
         response = client.messages.create(
             model=MODEL_NAME,

@@ -76,6 +76,13 @@ class AIService:
             else:
                 raise HTTPException(status_code=400, detail="LLM ID inválido para prompt de PDF.")
         
+        
+        elif full_prompt.tipo == TipoPromptEnum.BUSCA:
+            if req.llm_id == LLM.GEMINI:
+                result = await gemini_mgr.process_web_search(req)
+            else:
+                raise HTTPException(status_code=400, detail="LLM ID inválido para busca na web.")
+            
         else:
             raise HTTPException(status_code=400, detail="Tipo de prompt não suportado.")
 
