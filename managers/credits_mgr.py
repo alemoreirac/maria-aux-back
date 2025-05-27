@@ -29,7 +29,7 @@ async def get_user_data(user_id: str):
 
 async def set_credits(user_id:str, credits:int):
     try:
-        result = credits_repo.add_credits(user_id,credits)
+        result = await credits_repo.add_credits(user_id,credits)
         return result
     
     except Exception as e:
