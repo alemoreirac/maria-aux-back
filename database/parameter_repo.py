@@ -5,21 +5,13 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import sessionmaker
 from models.parameter_models import ParameterCreate, ParameterUpdate, ParameterResponse
-from models.enums import TipoParametroEnum
+from models.enums import TipoParametro
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 import os
 from dotenv import load_dotenv
+from database.db_config import AsyncSessionLocal
 load_dotenv()
-
-DATABASE_URL = os.getenv("ASYNC_PG_CONN_STR")
-engine = create_async_engine(
-    DATABASE_URL,
-    echo=False,
-    pool_recycle=1800,
-)
-AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+ 
 logger = logging.getLogger(__name__)
 class ParameterRepository:
     async def create_parameter(self, parameter_data: ParameterCreate) -> Optional[ParameterResponse]:
@@ -47,7 +39,7 @@ class ParameterRepository:
                         prompt_id=created_row[1],
                         titulo=created_row[2],
                         descricao=created_row[3],
-                        tipo=TipoParametroEnum(int(created_row[4])) # <-- CORRIGIDO
+                        tipo=TipoParametro(int(created_row[4])) # <-- CORRIGIDO
                     )
                 return None
             except SQLAlchemyError as e:
@@ -73,7 +65,7 @@ class ParameterRepository:
                         prompt_id=row[1],
                         titulo=row[2],
                         descricao=row[3],
-                        tipo=TipoParametroEnum(int(row[4])) # <-- CORRIGIDO
+                        tipo=TipoParametro(int(row[4])) # <-- CORRIGIDO
                     )
                 return None
             except SQLAlchemyError as e:
@@ -97,7 +89,7 @@ class ParameterRepository:
                         prompt_id=row[1],
                         titulo=row[2],
                         descricao=row[3],
-                        tipo=TipoParametroEnum(int(row[4])) # <-- CORRIGIDO
+                        tipo=TipoParametro(int(row[4])) # <-- CORRIGIDO
                     ) for row in rows
                 ]
             except SQLAlchemyError as e:
@@ -126,10 +118,10 @@ class ParameterRepository:
                         prompt_id=current_param[1], 
                         titulo=current_param[2],
                         descricao=current_param[3], 
-                        tipo=TipoParametroEnum(int(current_param[4]))
+                        tipo=TipoParametro(int(current_param[4]))
                     )
                 # Converter enum para valor se necessário
-                if 'tipo' in update_fields and isinstance(update_fields['tipo'], TipoParametroEnum):
+                if 'tipo' in update_fields and isinstance(update_fields['tipo'], TipoParametro):
                     update_fields['tipo'] = update_fields['tipo'].value
                 # IMPORTANTE: Remover prompt_id dos campos de atualização se estiver presente
                 # Isso garante que a chave estrangeira não seja tocada
@@ -142,7 +134,7 @@ class ParameterRepository:
                         prompt_id=current_param[1], 
                         titulo=current_param[2],
                         descricao=current_param[3], 
-                        tipo=TipoParametroEnum(int(current_param[4]))
+                        tipo=TipoParametro(int(current_param[4]))
                     )
                 # Construir a query de UPDATE apenas com os campos permitidos
                 set_clauses = [f"{key} = :{key}" for key in update_fields.keys()]
@@ -168,7 +160,7 @@ class ParameterRepository:
                         prompt_id=updated_row[1], 
                         titulo=updated_row[2],
                         descricao=updated_row[3], 
-                        tipo=TipoParametroEnum(int(updated_row[4]))
+                        tipo=TipoParametro(int(updated_row[4]))
                     )
                 
                 return None

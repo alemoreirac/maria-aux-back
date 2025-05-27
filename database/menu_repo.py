@@ -7,13 +7,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 import os
 from dotenv import load_dotenv
-from models.enums import TipoParametroEnum, TipoPromptEnum, LLM # Added LLM
+from models.enums import TipoParametro, TipoPrompt, LLM 
 from models.menu_models import MenuParameter, MenuPromptWithParams
-
+from database.db_config import AsyncSessionLocal
 load_dotenv()
-DATABASE_URL = os.getenv("ASYNC_PG_CONN_STR", "postgresql+asyncpg://user:password@host:port/dbname")
-engine = create_async_engine(DATABASE_URL, echo=False, pool_recycle=1800)
-AsyncSessionLocal = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
+
 logger = logging.getLogger(__name__)
 
 class MenuRepository:
@@ -22,8 +20,8 @@ class MenuRepository:
             try:
                 query = text("""
                     SELECT
-                        p.id as prompt_id, p.titulo as prompt_titulo, p.conteudo as prompt_conteudo,
-                        p.tipo as prompt_tipo, p.llm_used as prompt_llm_used,
+                        p.id as prompt_id, p.titulo as prompt_titulo,
+                        p.tipo, p.llm_used as prompt_llm_used,
                         p.has_reasoning as prompt_has_reasoning, p.has_search as prompt_has_search,
                         p.has_files as prompt_has_files, p.has_photo as prompt_has_photo,
                         par.id as param_id, par.titulo as param_titulo,
@@ -33,7 +31,7 @@ class MenuRepository:
                     ORDER BY p.id, par.id
                 """)
                 result = await session.execute(query)
-                rows = result.fetchall() # List of Row objects
+                rows = result.fetchall() 
 
                 prompts_map = {}
                 for row in rows:
@@ -41,8 +39,7 @@ class MenuRepository:
                         prompts_map[row.prompt_id] = MenuPromptWithParams(
                             id=row.prompt_id,
                             titulo=row.prompt_titulo,
-                            conteudo=row.prompt_conteudo,
-                            tipo=TipoPromptEnum(int(row.prompt_tipo)),
+                            tipo=TipoPrompt(int(row.tipo)),
                             llm_used=LLM(int(row.prompt_llm_used)) if row.prompt_llm_used is not None else None,
                             has_reasoning=row.prompt_has_reasoning,
                             has_search=row.prompt_has_search,
@@ -55,7 +52,7 @@ class MenuRepository:
                             id=row.param_id,
                             titulo=row.param_titulo,
                             descricao=row.param_descricao,
-                            tipo=TipoParametroEnum(int(row.param_tipo))
+                            tipo=TipoParametro(int(row.param_tipo))
                         )
                         prompts_map[row.prompt_id].parameters.append(parameter)
                 
@@ -99,7 +96,7 @@ class MenuRepository:
                             id=row_data.param_id,
                             titulo=row_data.param_titulo,
                             descricao=row_data.param_descricao,
-                            tipo=TipoParametroEnum(int(row_data.param_tipo))
+                            tipo=TipoParametro(int(row_data.param_tipo))
                         )
                         parameters.append(parameter)
                 
@@ -107,7 +104,7 @@ class MenuRepository:
                     id=first_row.prompt_id,
                     titulo=first_row.prompt_titulo,
                     conteudo=first_row.prompt_conteudo,
-                    tipo=TipoPromptEnum(int(first_row.prompt_tipo)),
+                    tipo=TipoPrompt(int(first_row.prompt_tipo)),
                     llm_used=LLM(int(first_row.prompt_llm_used)) if first_row.prompt_llm_used is not None else None,
                     has_reasoning=first_row.prompt_has_reasoning,
                     has_search=first_row.prompt_has_search,

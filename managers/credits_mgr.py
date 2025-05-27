@@ -26,3 +26,13 @@ async def get_user_data(user_id: str):
     except Exception as e:
         logger.error(f"Error retrieving user data: {e}")
         raise HTTPException(status_code=500, detail=f"Error analyzing PDF with Anthropic: {str(e)}")
+
+async def set_credits(user_id:str, credits:int):
+    try:
+        result = credits_repo.add_credits(user_id,credits)
+        return result
+    
+    except Exception as e:
+        logger.error(f"Error retrieving user data: {e}")
+        raise HTTPException(status_code=500, detail=f"Error analyzing PDF with Anthropic: {str(e)}")
+    

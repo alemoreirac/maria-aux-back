@@ -1,11 +1,11 @@
 from pydantic import BaseModel, Field
 from typing import Optional, Any
-from models.enums import TipoParametroEnum # Importar o Enum
+from models.enums import TipoParametro # Importar o Enum
 
 class ParameterBase(BaseModel):
     titulo: str = Field(..., max_length=255)
     descricao: Optional[str] = None
-    tipo: TipoParametroEnum
+    tipo: TipoParametro
 
 class ParameterCreate(ParameterBase):
     prompt_id: int
@@ -13,7 +13,7 @@ class ParameterCreate(ParameterBase):
 class ParameterUpdate(BaseModel):
     titulo: Optional[str] = Field(None, max_length=255)
     descricao: Optional[str] = None
-    tipo: Optional[TipoParametroEnum] = None
+    tipo: Optional[TipoParametro] = None
 
 class ParameterResponse(ParameterBase):
     id: int

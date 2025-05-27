@@ -3,7 +3,7 @@ from fastapi import HTTPException
 from database.credits_repo import UserCreditRepository
 from managers import gemini_mgr, chatgpt_mgr, claude_mgr 
 from models.prompt_models import PromptRequest
-from models.enums import LLM, TipoParametroEnum, TipoPromptEnum
+from models.enums import LLM, TipoParametro, TipoPrompt
 from managers.prompt_mgr import PromptManager
 
 logger = logging.getLogger(__name__)
@@ -26,7 +26,7 @@ class AIService:
         result = None
         prompt_content_for_llm = full_prompt.conteudo 
 
-        if full_prompt.tipo == TipoPromptEnum.TEXTO:
+        if full_prompt.tipo == TipoPrompt.TEXTO:
             if req.llm_id == LLM.CHAT_GPT:
                 result = await chatgpt_mgr.process(req)
             elif req.llm_id == LLM.CLAUDE:
@@ -36,11 +36,11 @@ class AIService:
             else:
                 raise HTTPException(status_code=400, detail="LLM ID inválido para prompt de texto.")
 
-        elif full_prompt.tipo == TipoPromptEnum.IMAGEM:
+        elif full_prompt.tipo == TipoPrompt.IMAGEM:
             image_base64 = None
             image_media_type = "image/jpeg" 
             for param in req.parameters:
-                if param.tipo_param == TipoParametroEnum.IMAGEM:
+                if param.tipo_param == TipoParametro.IMAGEM:
                     image_base64 = param.valor
                     
                     break
@@ -57,10 +57,10 @@ class AIService:
             else:
                 raise HTTPException(status_code=400, detail="LLM ID inválido para prompt de imagem.")
                 
-        elif full_prompt.tipo == TipoPromptEnum.PDF:
+        elif full_prompt.tipo == TipoPrompt.PDF:
             pdf_base64 = None
             for param in req.parameters:
-                if param.tipo_param == TipoParametroEnum.ARQUIVO_PDF: 
+                if param.tipo_param == TipoParametro.ARQUIVO_PDF: 
                     pdf_base64 = param.valor
                     break
             
@@ -77,7 +77,7 @@ class AIService:
                 raise HTTPException(status_code=400, detail="LLM ID inválido para prompt de PDF.")
         
         
-        elif full_prompt.tipo == TipoPromptEnum.BUSCA:
+        elif full_prompt.tipo == TipoPrompt.BUSCA:
             if req.llm_id == LLM.GEMINI:
                 result = await gemini_mgr.process_web_search(req)
             else:

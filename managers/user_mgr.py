@@ -4,21 +4,27 @@ from dotenv import load_dotenv
 import json
 load_dotenv()
 import firebase_admin
+from credits_mgr import set_credits
 
-# Get the FIREBASE_CREDENTIALS string from the environment variable
-firebase_credentials_json_string = os.getenv("FIREBASE_CREDENTIALS")
+env = os.getenv("ENV")
 
-# Check if the environment variable is set
-if not firebase_credentials_json_string:
-    raise ValueError("FIREBASE_CREDENTIALS environment variable is not set. Please set it in your .env file or production environment.")
+if env == "prod": 
+    # Get the FIREBASE_CREDENTIALS string from the environment variable
+    firebase_credentials_json_string = os.getenv("FIREBASE_CREDENTIALS")
 
-# Parse the JSON string into a Python dictionary
-try:
-    cred_dict = json.loads(firebase_credentials_json_string)
-except json.JSONDecodeError as e:
-    raise ValueError(f"Failed to parse FIREBASE_CREDENTIALS JSON string: {e}. Ensure it's valid JSON and newlines are escaped (\\n).")
+    # Check if the environment variable is set
+    if not firebase_credentials_json_string:
+        raise ValueError("FIREBASE_CREDENTIALS environment variable is not set. Please set it in your .env file or production environment.")
 
-# Initialize Firebase Admin SDK with the dictionary
+    # Parse the JSON string into a Python dictionary
+    try:
+        cred_dict = json.loads(firebase_credentials_json_string)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse FIREBASE_CREDENTIALS JSON string: {e}. Ensure it's valid JSON and newlines are escaped (\\n).")
+
+else:   
+    print("fudeu implementa aí a versão dev")
+
 try:
     cred = credentials.Certificate(cred_dict)
     initialize_app(cred)
@@ -30,7 +36,9 @@ except Exception as e:
 class UserManager:
    
     def create_user(self, email, password):
-        return auth.create_user(email=email, password=password)
+        user = auth.create_user(email=email, password=password)
+        set_credits(user.id,3) # novos usuários ganham 3 créditos - não alterar
+        return user
     
     def get_user(self, uid):
         return auth.get_user(uid)

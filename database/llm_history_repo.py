@@ -5,7 +5,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
-
+from database.db_config import AsyncSessionLocal
 from typing import List, Any, Dict
 import os
 from dotenv import load_dotenv 
@@ -14,15 +14,6 @@ import asyncio
 load_dotenv()
 
 logger = logging.getLogger(__name__)
- 
-engine = create_async_engine(
-    os.getenv("ASYNC_PG_CONN_STR"),
-    echo=False,
-    pool_recycle=1800,
-)
-
-AsyncSessionLocal = sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False)
  
 class LLMHistoryRepository:  
     async def log_message( 

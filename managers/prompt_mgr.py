@@ -3,7 +3,7 @@ import logging
 from typing import List, Optional, Any, Dict
 from database.prompt_repo import PromptRepository
 from models.prompt_models import FilledParameter, PromptCreate, PromptRequest, PromptUpdate, PromptResponse, PromptWithParams # Atualizado
-from models.enums import TipoParametroEnum 
+from models.enums import TipoParametro 
 logger = logging.getLogger(__name__)
 
 class PromptManager:

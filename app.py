@@ -4,9 +4,20 @@ from database.db_setup import DatabaseSetup
 from fastapi import FastAPI 
 from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
 import uvicorn
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
-app = FastAPI(title="Maria-Aux Back-end",
-              description="API Maria Aux 1.0.0")
+# Desabilita docs se estiver em produção
+docs_url = None if os.getenv("ENV") == "prod" else "/docs"
+
+app = FastAPI(
+    title="Maria-Aux Back-end",
+    description="API Maria Aux 1.0.0",
+    docs_url=docs_url
+)
+
+app = FastAPI()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

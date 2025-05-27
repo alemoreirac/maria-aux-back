@@ -1,30 +1,34 @@
 # models/prompt_models.py
 from pydantic import BaseModel, Field
 from typing import Any, List, Optional
-from models.enums import TipoParametroEnum, TipoPromptEnum, LLM # Added LLM
+from models.enums import TipoParametro, TipoPrompt, LLM, CategoriaPrompt
 
 class PromptBase(BaseModel):
     titulo: str
     conteudo: str
-    tipo: TipoPromptEnum
-    llm_used: Optional[LLM] = None  # New field
-    has_reasoning: bool = Field(default=False) # New field
-    has_search: bool = Field(default=False)    # New field
-    has_files: bool = Field(default=False)     # New field
-    has_photo: bool = Field(default=False)     # New field
+    descricao: str
+    categoria: CategoriaPrompt
+    tipo: TipoPrompt
+    llm_used: Optional[LLM] = None  
+    has_reasoning: bool = Field(default=False) 
+    has_search: bool = Field(default=False)    
+    has_files: bool = Field(default=False)     
+    has_photo: bool = Field(default=False)     
 
 class PromptCreate(PromptBase):
     pass
 
 class PromptUpdate(BaseModel):
     titulo: Optional[str] = None
+    descricao: Optional[str] = None
     conteudo: Optional[str] = None
-    tipo: Optional[TipoPromptEnum] = None
-    llm_used: Optional[LLM] = None          # New field, can be None to unset
-    has_reasoning: Optional[bool] = None    # New field
-    has_search: Optional[bool] = None       # New field
-    has_files: Optional[bool] = None        # New field
-    has_photo: Optional[bool] = None        # New field
+    tipo: Optional[TipoPrompt] = None
+    categoria: Optional[CategoriaPrompt] = None      
+    llm_used: Optional[LLM] = None         
+    has_reasoning: Optional[bool] = None   
+    has_search: Optional[bool] = None      
+    has_files: Optional[bool] = None       
+    has_photo: Optional[bool] = None       
 
 class PromptResponse(PromptBase):
     id: int
@@ -34,7 +38,7 @@ class PromptResponse(PromptBase):
 
 class FilledParameter(BaseModel):
     titulo: str
-    tipo_param: TipoParametroEnum
+    tipo_param: TipoParametro
     valor: Any
 
 class PromptRequest(BaseModel):
