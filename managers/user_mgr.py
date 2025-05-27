@@ -37,7 +37,8 @@ class UserManager:
    
     def create_user(self, email, password):
         user = auth.create_user(email=email, password=password)
-        set_credits(user.id,3) # novos usuários ganham 3 créditos - não alterar
+        print(str(user))
+        set_credits(user.uid,3) # novos usuários ganham 3 créditos - não alterar
         return user
     
     def get_user(self, uid):
