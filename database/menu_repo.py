@@ -23,7 +23,7 @@ class MenuRepository:
                         p.id as prompt_id, p.titulo as prompt_titulo,
                         p.tipo, p.llm_used as prompt_llm_used,
                         p.has_reasoning as prompt_has_reasoning, p.has_search as prompt_has_search,
-                        p.has_files as prompt_has_files, p.has_photo as prompt_has_photo,
+                        p.has_files as prompt_has_files, p.has_photo as prompt_has_photo, p.descricao as prompt_descricao,
                         par.id as param_id, par.titulo as param_titulo,
                         par.descricao as param_descricao, par.tipo as param_tipo
                     FROM aux.prompts p
@@ -45,6 +45,7 @@ class MenuRepository:
                             has_search=row.prompt_has_search,
                             has_files=row.prompt_has_files,
                             has_photo=row.prompt_has_photo,
+                            descricao=row.prompt_descricao,
                             parameters=[]
                         )
                     if row.param_id is not None:
@@ -74,7 +75,7 @@ class MenuRepository:
                         p.id as prompt_id, p.titulo as prompt_titulo,
                         p.tipo as prompt_tipo, p.llm_used as prompt_llm_used,
                         p.has_reasoning as prompt_has_reasoning, p.has_search as prompt_has_search,
-                        p.has_files as prompt_has_files, p.has_photo as prompt_has_photo,
+                        p.has_files as prompt_has_files, p.has_photo as prompt_has_photo, p.descricao as prompt_descricao,
                         par.id as param_id, par.titulo as param_titulo,
                         par.descricao as param_descricao, par.tipo as param_tipo
                     FROM aux.prompts p
@@ -109,6 +110,7 @@ class MenuRepository:
                     has_search=first_row.prompt_has_search,
                     has_files=first_row.prompt_has_files,
                     has_photo=first_row.prompt_has_photo,
+                    descricao = first_row.prompt_descricao,
                     parameters=parameters
                 )
             except SQLAlchemyError as e:
