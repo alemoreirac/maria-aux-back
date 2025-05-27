@@ -23,7 +23,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
  
 origins = [
-    "https://arq-front-streamlit-production.up.railway.app", 
+    "https://maria-aux-front-production.up.railway.app", 
 ]
 
 # Add CORS middleware to your FastAPI application
