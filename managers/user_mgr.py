@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import json
 load_dotenv()
 import firebase_admin
-from credits_mgr import set_credits
+from managers.credits_mgr import set_credits
 
 env = os.getenv("ENV")
 

@@ -2,13 +2,12 @@ import logging
 from controllers import ai_controller, user_controller, prompt_controller, parameter_controller, menu_controller
 from database.db_setup import DatabaseSetup
 from fastapi import FastAPI 
-from fastapi.middleware.cors import CORSMiddleware # Import CORSMiddleware
+from fastapi.middleware.cors import CORSMiddleware 
 import uvicorn
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-# Desabilita docs se estiver em produção
 docs_url = None if os.getenv("ENV") == "prod" else "/docs"
 
 app = FastAPI(
