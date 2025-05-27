@@ -71,7 +71,7 @@ class MenuRepository:
             try:
                 query = text("""
                     SELECT
-                        p.id as prompt_id, p.titulo as prompt_titulo, p.conteudo as prompt_conteudo,
+                        p.id as prompt_id, p.titulo as prompt_titulo,
                         p.tipo as prompt_tipo, p.llm_used as prompt_llm_used,
                         p.has_reasoning as prompt_has_reasoning, p.has_search as prompt_has_search,
                         p.has_files as prompt_has_files, p.has_photo as prompt_has_photo,
@@ -103,7 +103,6 @@ class MenuRepository:
                 return MenuPromptWithParams(
                     id=first_row.prompt_id,
                     titulo=first_row.prompt_titulo,
-                    conteudo=first_row.prompt_conteudo,
                     tipo=TipoPrompt(int(first_row.prompt_tipo)),
                     llm_used=LLM(int(first_row.prompt_llm_used)) if first_row.prompt_llm_used is not None else None,
                     has_reasoning=first_row.prompt_has_reasoning,
