@@ -35,10 +35,9 @@ except Exception as e:
 
 class UserManager:
    
-    def create_user(self, email, password):
+    async def create_user(self, email, password):
         user = auth.create_user(email=email, password=password)
-        print(str(user))
-        set_credits(user.uid,3) # novos usuários ganham 3 créditos - não alterar
+        await set_credits(user.uid,3) # novos usuários ganham 3 créditos - não alterar
         return user
     
     def get_user(self, uid):

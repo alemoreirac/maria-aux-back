@@ -37,9 +37,9 @@ class UserCreditsAndLLMHistory(BaseModel):
 
 # Endpoint de criação de usuário (aberto)
 @router.post("/api/users", response_model=UserResponse, status_code=201)
-def create_user(user: UserCreate):
+async def create_user(user: UserCreate):
     try:
-        fb_user = user_mgr.create_user(user.email, user.password)
+        fb_user = await user_mgr.create_user(user.email, user.password)
         return {"uid": fb_user.uid, "email": fb_user.email}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
