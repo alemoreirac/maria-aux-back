@@ -1,5 +1,6 @@
 import logging
 from database.prompt_repo import PromptRepository
+from models.enums import TipoParametro
 from models.prompt_models import PromptRequest
 
 
@@ -19,9 +20,10 @@ class MenuManager:
         result = prompt.conteudo
         param_values = ""
         for param in req.parameters:
-            placeholder = "{" + param.titulo + "}: "
-            param_value_str = str(param.valor) + "\n"
-            param_values = param_values + placeholder + param_value_str
+            if param.tipo == TipoParametro.TEXTO or param.tipo == TipoParametro.NUMERICO:
+                placeholder = "{" + param.titulo + "}: "
+                param_value_str = str(param.valor) + "\n"
+                param_values = param_values + placeholder + param_value_str
         
         result = result + param_values
         

@@ -38,7 +38,7 @@ class PromptResponse(PromptBase):
 
 class FilledParameter(BaseModel):
     titulo: str
-    tipo_param: TipoParametro
+    tipo: TipoParametro
     valor: Any
 
 class PromptRequest(BaseModel):
@@ -52,3 +52,7 @@ class PromptWithParams(PromptBase):
 
     class Config:
         from_attributes = True # For Pydantic v2
+        
+class AIResponse(BaseModel):
+    llm_response: str
+    request_id: str

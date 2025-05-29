@@ -1,37 +1,31 @@
 from datetime import datetime, timezone, timedelta  
 import logging 
-import os
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker, declarative_base
 from sqlalchemy import text
 from sqlalchemy.exc import SQLAlchemyError
 from database.db_config import AsyncSessionLocal
 from typing import List, Any, Dict
-import os
-from dotenv import load_dotenv 
 import asyncio 
 
-load_dotenv()
 
 logger = logging.getLogger(__name__)
  
 class LLMHistoryRepository:  
-    async def log_message( 
+     async def log_message( 
             self,
             user_id: str,
             user_query: str,
             gpt_response: str,
-        ) -> None: 
+        ) -> str: 
 
         async with AsyncSessionLocal() as session:
             try:
                 create_table_sql = text("""
                     CREATE TABLE IF NOT EXISTS aux.llm_log (
+                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         user_id TEXT NOT NULL,
                         user_query TEXT,
                         gpt_response TEXT,
-                        timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
-                        PRIMARY KEY (user_id, timestamp)
+                        timestamp TIMESTAMP WITH TIME ZONE NOT NULL
                     );
                 """)
 
@@ -46,10 +40,11 @@ class LLMHistoryRepository:
  
                 insert_sql = text("""
                     INSERT INTO aux.llm_log (user_id, user_query, gpt_response, timestamp)
-                    VALUES (:user_id, :user_query, :gpt_response, :timestamp);
+                    VALUES (:user_id, :user_query, :gpt_response, :timestamp)
+                    RETURNING id;
                 """)
- 
-                await session.execute(
+
+                result = await session.execute(
                     insert_sql,
                     {
                         "user_id": user_id,
@@ -58,57 +53,26 @@ class LLMHistoryRepository:
                         "timestamp": datetime.now(timezone.utc),  
                     },
                 )
+                
+                # Obter o ID gerado do RETURNING
+                inserted_id = result.fetchone()[0]
+                
                 # --- Crucial Fix: Commit the INSERT operation ---
                 await session.commit()
                 logger.debug("Commit após INSERT executado.")
+                
+                return str(inserted_id)
     
             except SQLAlchemyError as e: 
-                logger.error(f"SQLAlchemy error during message logging: {e}", exc_info=True) 
+                logger.error(f"SQLAlchemy error during message logging: {e}", exc_info=True)
+                raise  # Re-raise para que o chamador saiba que houve erro
             except Exception as e: 
                 logger.error(f"Unexpected error during message logging: {e}", exc_info=True)
+                raise  # Re-raise para que o chamador saiba que houve erro
 
-    async def get_recent_history(
-            self, 
-            user_id: str,
-        ) -> List[Dict[str, Any]]: 
-    
-        async with AsyncSessionLocal() as session:
-            try:   
-                select_sql = text("""
-                    SELECT user_id, user_query, gpt_response, timestamp
-                    FROM aux.llm_log
-                    WHERE user_id = :user_id 
-                    ORDER BY timestamp DESC
-                    LIMIT 20;
-                """)
-
-                result = await session.execute(
-                    select_sql,
-                    {
-                        "user_id": user_id
-                    },
-                )
-
-                messages = result.fetchall()
-
-                history_list_of_dicts = [dict(row._mapping) for row in messages]
-
-                return  history_list_of_dicts
-            except SQLAlchemyError as e:
-                # Log database-specific errors
-                logger.error(f"SQLAlchemy error during llm log history for user:  {user_id}: {e}", exc_info=True)
-                return [] # Return an empty list on error   
-            except Exception as e:
-                # Catch any other unexpected errors
-                logger.error(f"Unexpected error during llm log history for user: {user_id}: {e}", exc_info=True)
-                return [] # Return an empty list on error
  
 
 async def test_log_message_and_retrieve():
-    """
-    Função assíncrona para testar os métodos log_message e get_recent_history.
-    """
-    print("Iniciando teste do LLMHistoryRepository...")
 
     repository = LLMHistoryRepository()
 

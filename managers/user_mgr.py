@@ -22,13 +22,13 @@ if env == "prod":
     except json.JSONDecodeError as e:
         raise ValueError(f"Failed to parse FIREBASE_CREDENTIALS JSON string: {e}. Ensure it's valid JSON and newlines are escaped (\\n).")
 
-else:   
-    print("fudeu implementa aí a versão dev")
+else:    
+    with open('firebase-credentials.json', 'r') as f:
+        cred_dict = json.load(f)
 
 try:
     cred = credentials.Certificate(cred_dict)
     initialize_app(cred)
-    print("Firebase Admin SDK initialized successfully from environment variable.")
 except Exception as e:
     raise ValueError(f"Failed to initialize Firebase Admin SDK with provided credentials: {e}. Check the 'private_key' content for validity.")
 

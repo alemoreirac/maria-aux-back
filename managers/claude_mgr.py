@@ -4,7 +4,9 @@ import logging
 import os
 from managers.menu_mgr import MenuManager 
 from dotenv import load_dotenv
+from models.enums import TipoParametro
 from models.prompt_models import PromptRequest
+from utils.file_util import get_default_filename, get_mime_type
 
 load_dotenv()
 
@@ -18,14 +20,15 @@ if not anthropic_api_key:
 client = anthropic.Anthropic(api_key=anthropic_api_key)
 menu_mgr = MenuManager() 
 
-MODEL_NAME = "claude-3-sonnet-20240229" 
+#MODEL_NAME = "claude-3-sonnet-20240229" 
+CLAUDE4='claude-sonnet-4-20250514'
 
 async def process(req: PromptRequest) -> str:
     try:
         prompt_content = await menu_mgr.mount(req) # For text-based prompts
         
         response = client.messages.create(
-            model=MODEL_NAME,
+            model=CLAUDE4,
             messages=[{"role": "user", "content": prompt_content}],
             temperature=0.3,
             max_tokens=2048
@@ -38,67 +41,57 @@ async def process(req: PromptRequest) -> str:
     except Exception as e:
         logger.error(f"Erro ao processar prompt com Claude (texto): {e}")
         raise HTTPException(status_code=500, detail=f"Erro no processamento com Claude (texto): {str(e)}")
-
-async def process_image_base64(image_base64: str, prompt_text: str, image_media_type: str = "image/jpeg") -> str:
+ 
+async def process_file(file_base64: str, prompt_text: str, tipo_arquivo: TipoParametro) -> str:
     try:
+        mime_type = get_mime_type(tipo_arquivo)
+          
         response = client.messages.create(
-            model=MODEL_NAME,
-            max_tokens=2048,
-            temperature=0.3,
+            model=CLAUDE4,
+            max_tokens=204,
             messages=[
-                {
-                    "role": "user",
-                    "content": [
-                        {
-                            "type": "image",
-                            "source": {
-                                "type": "base64",
-                                "media_type": image_media_type,
-                                "data": image_base64,
-                            },
-                        },
-                        {"type": "text", "text": prompt_text},
-                    ],
-                }
+              {
+                "role":"user",
+                "content":[
+                    {
+                        "type": "image",
+                        "source": { 
+                            "type": "base64",
+                            "media_type": mime_type,
+                            "data": file_base64
+                                }                       
+                    },
+                    {"type": "text", "text": prompt_text},
+                ],
+              }
             ],
         )
         result = response.content[0].text.strip()
-        logger.info("Resposta de imagem do Claude recebida com sucesso.")
         return result
     except Exception as e:
-        logger.error(f"Erro ao processar imagem com Claude: {e}")
-        raise HTTPException(status_code=500, detail=f"Erro no processamento de imagem com Claude: {str(e)}")
-
-async def process_pdf_base64(pdf_base64: str, prompt_text: str) -> str:
+        print(e)
+        
+async def process_web_search(req: PromptRequest):
     try:
+        prompt_content = await menu_mgr.mount(req)
+        
         response = client.messages.create(
-            model=MODEL_NAME,
-            max_tokens=4096, 
-            temperature=0.3,
+            model=CLAUDE4,
+            max_tokens=2048,
             messages=[
                 {
                     "role": "user",
-                    "content": [
-                        {
-                            "type": "document",
-                            "source": { 
-                                "type": "base64",
-                                "media_type": "application/pdf",
-                                "data": pdf_base64,
-                            },
-                        },
-                        {"type": "text", "text": prompt_text},
-                    ],
+                    "content": prompt_content
                 }
             ],
+            tools=[{
+                "type": "web_search_20250305",
+                "name": "web_search",
+                "max_uses": 1
+            }]
         )
-        result = response.content[0].text.strip() # Access the text content
-        logger.info("Resposta de PDF do Claude recebida com sucesso.")
-        return result
+        return response
+    
     except Exception as e:
-        logger.error(f"Erro ao processar PDF com Claude: {e}")
-        # Check for specific Anthropic errors if possible, e.g., e.status_code
-        if isinstance(e, anthropic.APIError):
-            logger.error(f"Anthropic API Error: {e.status_code} - {e.message}")
-            raise HTTPException(status_code=e.status_code or 500, detail=f"Erro da API Claude ao processar PDF: {e.message}")
-        raise HTTPException(status_code=500, detail=f"Erro no processamento de PDF com Claude: {str(e)}")
+        logger.error(f"Erro ao processar prompt com Claude (texto): {e}")
+        raise HTTPException(status_code=500, detail=f"Erro no processamento com Claude (texto): {str(e)}")
