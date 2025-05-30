@@ -6,6 +6,8 @@ load_dotenv()
 import firebase_admin
 from managers.credits_mgr import set_credits
 
+NEW_USER_CREDIT = 2
+
 env = os.getenv("ENV")
 
 if env == "prod": 
@@ -37,7 +39,10 @@ class UserManager:
    
     async def create_user(self, email, password):
         user = auth.create_user(email=email, password=password)
-        await set_credits(user.uid,3) # novos usuários ganham 3 créditos - não alterar
+        auth.generate_email_verification_link(email)
+        
+        await set_credits(user.uid,NEW_USER_CREDIT)  
+        
         return user
     
     def get_user(self, uid):
