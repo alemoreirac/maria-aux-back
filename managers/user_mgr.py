@@ -3,7 +3,7 @@ import os
 from dotenv import load_dotenv
 import json
 load_dotenv()
-import firebase_admin
+from managers.email_mgr import EmailManager
 from managers.credits_mgr import set_credits
 
 NEW_USER_CREDIT = 2
@@ -39,7 +39,10 @@ class UserManager:
    
     async def create_user(self, email, password):
         user = auth.create_user(email=email, password=password)
-        auth.generate_email_verification_link(email)
+        link = auth.generate_email_verification_link(email)
+        
+        email_mgr = EmailManager()
+        email_mgr.send_verification_email(email,link)
         
         await set_credits(user.uid,NEW_USER_CREDIT)  
         
