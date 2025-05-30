@@ -10,7 +10,7 @@ import asyncio
 logger = logging.getLogger(__name__)
  
 class LLMHistoryRepository:  
-     async def log_message( 
+    async def log_message( 
             self,
             user_id: str,
             user_query: str,
@@ -70,7 +70,41 @@ class LLMHistoryRepository:
                 logger.error(f"Unexpected error during message logging: {e}", exc_info=True)
                 raise  # Re-raise para que o chamador saiba que houve erro
 
- 
+    async def get_recent_history(
+                self, 
+                user_id: str,
+            ) -> List[Dict[str, Any]]: 
+        
+            async with AsyncSessionLocal() as session:
+                try:   
+                    select_sql = text("""
+                        SELECT user_id, user_query, gpt_response, timestamp
+                        FROM aux.llm_log
+                        WHERE user_id = :user_id 
+                        ORDER BY timestamp DESC
+                        LIMIT 20;
+                    """)
+
+                    result = await session.execute(
+                        select_sql,
+                        {
+                            "user_id": user_id
+                        },
+                    )
+
+                    messages = result.fetchall()
+
+                    history_list_of_dicts = [dict(row._mapping) for row in messages]
+
+                    return  history_list_of_dicts
+                except SQLAlchemyError as e:
+                    # Log database-specific errors
+                    logger.error(f"SQLAlchemy error during llm log history for user:  {user_id}: {e}", exc_info=True)
+                    return [] # Return an empty list on error   
+                except Exception as e:
+                    # Catch any other unexpected errors
+                    logger.error(f"Unexpected error during llm log history for user: {user_id}: {e}", exc_info=True)
+                    return [] 
 
 async def test_log_message_and_retrieve():
 
