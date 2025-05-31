@@ -69,8 +69,7 @@ class AIService:
                 result = await chatgpt_mgr.process_web_search(req)    
             if req.llm_id == LLM.CLAUDE:
                 result = await claude_mgr.process_web_search(req)
-            else:
-                raise HTTPException(status_code=400, detail="LLM ID inválido para busca na web.")
+            
             
         else:
             raise HTTPException(status_code=400, detail="Tipo de prompt não suportado.")
